@@ -30,6 +30,7 @@
 #include <linux/idr.h>
 #include <linux/mutex.h>
 #include <linux/backing-dev.h>
+#include <linux/cleancache.h>
 #include "internal.h"
 
 
@@ -95,6 +96,7 @@ static struct super_block *alloc_super(struct file_system_type *type)
 		s->s_maxbytes = MAX_NON_LFS;
 		s->s_op = &default_op;
 		s->s_time_gran = 1000000000;
+		s->cleancache_poolid = -1;
 	}
 out:
 	return s;
@@ -180,6 +182,7 @@ void deactivate_super(struct super_block *s)
         if (!atomic_add_unless(&s->s_active, -1, 1)) {
 		down_write(&s->s_umount);
 		deactivate_locked_super(s);
+		cleancache_flush_fs(s);
 	}
 }
 
